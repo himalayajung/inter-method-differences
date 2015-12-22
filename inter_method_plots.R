@@ -1,6 +1,4 @@
 # plots for inter-method comparsion of brain volume estimates
-
-
 library(reshape2)
 library(ggplot2)
 library(dplyr)
@@ -20,6 +18,7 @@ min.1sd.median.1sd.max <- function(x) {
   names(r) <- c("ymin", "lower", "middle", "upper", "ymax")
   r
 }
+# helper function to add stars to p-values
 get_stars = function(x){
   if (x<0.005){
     z = '**'
@@ -31,6 +30,7 @@ get_stars = function(x){
   return(z)
 }
 
+# bar plots for methods 
 diff_bar_plot = function(d, title, keep.legend=FALSE){
   d[d$method=="FS" & d$tissue == "CSF", "estimate"] = 0
   d[d$method=="FS" & d$tissue == "CSF", "p.value"] = 1
@@ -65,7 +65,7 @@ diff_bar_plot = function(d, title, keep.legend=FALSE){
 m = read.csv("../../data/brain_volumes_long1.csv")
 # m = subset(m, site == "NYU") # if only NYU site
 
-# changing factor levels to control the order in plots
+# changing factor levels to control the order in regression models and also in plots
 m$control = factor(m$control, levels = c("TDC", "ASD"))
 m$method = factor(m$method, levels = c("SPM", "FSL", "FS"))
 m$tissue = factor(m$tissue, levels = c("TIV", "GM", "WM", "CSF"))
@@ -93,8 +93,9 @@ m_stat = m %>%
   group_by(method, tissue) %>% 
   do(tidy(lm(value~control, data = .)))
 # multiple comparsion correction across method using FDR
-m_stat = m_stat %>% group_by(tissue) %>%
-  mutate(p.value = p.adjust(p.value, method="BH"))
+m_stat = m_stat %>%
+    group_by(tissue) %>%
+    mutate(p.value = p.adjust(p.value, method="BH"))
 raw = diff_bar_plot(m_stat, title='A(ii) Mean Inter-group difference in raw brain volumes')
 
 # adjusting covariates
@@ -102,8 +103,10 @@ m_stat = m %>%
   filter(!is.na(value)) %>% # remove FS CSF
   group_by(method, tissue) %>% 
   do(tidy(my.lm(value~control+sex+age+I(age^2)+site, data = .)))
-m_stat = m_stat %>% group_by(tissue) %>%
-  mutate(p.value = p.adjust(p.value, method="BH"))
+# multiple comparsion correction across method using FDR
+m_stat = m_stat %>%
+    group_by(tissue) %>%
+    mutate(p.value = p.adjust(p.value, method="BH"))
 adjusted = diff_bar_plot(m_stat, title='B) Mean Inter-group volume difference after adjusting for covariates')
 
 # adjusting covariates including FIQ
@@ -112,8 +115,10 @@ m_stat = m %>%
   filter(!is.na(FIQ)) %>% # remove FIQ NAs
   group_by(method, tissue) %>% 
   do(tidy(my.lm(value~control+sex+age+I(age^2)+FIQ+site, data = .)))
-m_stat = m_stat %>% group_by(tissue) %>%
-  mutate(p.value = p.adjust(p.value, method="BH"))
+# multiple comparsion correction across method using FDR
+m_stat = m_stat %>%
+    group_by(tissue) %>%
+    mutate(p.value = p.adjust(p.value, method="BH"))
 adjusted_FIQ = diff_bar_plot(m_stat, title='B) Mean Inter-group volume difference after adjusting for covariates')
 
 # black line to put as border 
