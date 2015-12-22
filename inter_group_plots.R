@@ -1,4 +1,4 @@
-# plots for inter-method comparsion of brain volume estimates
+# plots to show how inter-group differences are influences by inter-method differences
 library(reshape2)
 library(ggplot2)
 library(dplyr)
