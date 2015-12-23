@@ -9,19 +9,29 @@ library(RColorBrewer)
 
 # calculate different statistics (Cohen's d, p-val, % ) of inter-method diffrences
 inter_method_diff = function(df_method){
-  p_values = df_method %>% group_by(tissue) %>% 
-    # summarise_each(funs(t.test(SPM, ., paired = TRUE)$p.value), vars = c(FSL, FS))
-    summarise_each(funs(t.test.p.value(SPM, ., original=TRUE, pair = TRUE)), vars = c(FSL, FS)) 
-  colnames(p_values) = c("tissue", "SPM-FSL", "SPM-FS")
+  # SPM vs. FSL & FS
+  diff = df_method %>% group_by(tissue) %>% 
+    summarise_each(funs(p = t.test.p.value(SPM, ., original=TRUE, pair = TRUE), 
+                        cd = cohen.d(SPM, ., na.rm=TRUE)$estimate), vars=c(FSL, FS) )
+  diff = melt(diff, id="tissue")
+  diff = diff[order(as.character(diff$variable)), ]
+  diff$metric = gsub(".*_", "", diff$variable)
+  diff$variable = rep(c("SPM_FSL", "SPM_FS"), each=2*length(unique(diff$tissue)))
   
-  cd_values = df_method %>% group_by(tissue) %>% 
-    summarise_each(funs(cohen.d(SPM, ., na.rm=TRUE)$estimate), vars = c(FSL, FS)) 
-  colnames(cd_values) = c("tissue", "SPM-FSL", "SPM-FS")
+  # FSL vs. FS
+  diff1 = df_method %>% group_by(tissue) %>% 
+    summarise_each(funs(p = t.test.p.value(FSL, ., original=TRUE, pair = TRUE), 
+                        cd = cohen.d(FSL, ., na.rm=TRUE)$estimate), vars=c(FS) )
+  diff1 = melt(diff1, id="tissue")
+  diff1$metric = gsub(".*_", "", diff1$variable)
+  diff1$variable = rep(c("FSL_FS"), each=2*length(unique(diff1$tissue)))
   
-  pcd = rbind(p_values, cd_values)
-  pcd$metric = c(rep("p_val",4), rep("cd", 4))
-  
-  return(pcd)
+  diff = rbind(diff, diff1)
+  diff = dcast(diff, ...~metric)
+  diff = diff[order(as.character(diff$variable)), ]
+  # multiple comparisons correction FDR
+  diff$p_corrected = p.adjust(diff$p, method="BH")
+  return(diff)
 }
 
 # data
