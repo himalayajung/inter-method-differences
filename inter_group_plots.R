@@ -20,9 +20,9 @@ min.1sd.median.1sd.max <- function(x) {
 }
 # helper function to add stars to p-values
 get_stars = function(x){
-  if (x<0.005){
+  if (x < 0.005){
     z = '**'
-  } else if (x<0.05){
+  } else if (x < 0.05){
     z = '* '
   } else{
     z = "  "
