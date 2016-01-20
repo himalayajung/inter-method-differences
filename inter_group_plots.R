@@ -7,15 +7,15 @@ library(gridExtra)
 library(broom) # to use tidy()
 
 # custom boxplots
-min.1sd.mean.1sd.max <- function(x) {
-  r <- c(min(x), mean(x) - sd(x), mean(x), mean(x) + sd(x), max(x))
-  names(r) <- c("ymin", "lower", "middle", "upper", "ymax")
+min.1sd.mean.1sd.max = function(x) {
+  r = c(min(x), mean(x) - sd(x), mean(x), mean(x) + sd(x), max(x))
+  names(r) = c("ymin", "lower", "middle", "upper", "ymax")
   r
 }
 
-min.1sd.median.1sd.max <- function(x) {
-  r <- c(min(x), mean(x) - sd(x), median(x), mean(x) + sd(x), max(x))
-  names(r) <- c("ymin", "lower", "middle", "upper", "ymax")
+min.1sd.median.1sd.max = function(x) {
+  r = c(min(x), mean(x) - sd(x), median(x), mean(x) + sd(x), max(x))
+  names(r) = c("ymin", "lower", "middle", "upper", "ymax")
   r
 }
 # helper function to add stars to p-values
